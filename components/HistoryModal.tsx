@@ -1,5 +1,8 @@
 import React from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import IconButton from './IconButton';
+import { DownloadIcon } from './icons';
 import type { Match } from '../App';
 
 interface HistoryModalProps {
@@ -14,6 +17,49 @@ const CloseIcon: React.FC = () => (
 );
 
 const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose }) => {
+
+  const handleDownloadPdf = () => {
+    if (history.length === 0) return;
+
+    const doc = new jsPDF();
+    const reversedHistory = [...history].reverse();
+    const lastMatch = reversedHistory[0];
+
+    doc.text("Match History", 14, 20);
+    
+    const tableData = reversedHistory.map((match, index) => {
+        const matchNumber = history.length - index;
+        const matchDate = new Date(match.timestamp).toLocaleDateString();
+        return [
+            match.teamA.score,
+            `Match ${matchNumber}\n${matchDate}`,
+            match.teamB.score,
+        ];
+    });
+
+    autoTable(doc, {
+        head: [[lastMatch.teamA.name, 'Match', lastMatch.teamB.name]],
+        body: tableData,
+        startY: 30,
+        headStyles: {
+            fillColor: [41, 128, 185], // A nice blue color
+            textColor: 255,
+            fontStyle: 'bold',
+        },
+        styles: {
+            halign: 'center',
+            valign: 'middle'
+        },
+        columnStyles: {
+            0: { halign: 'center', fontStyle: 'bold', fontSize: 14 },
+            1: { halign: 'center' },
+            2: { halign: 'center', fontStyle: 'bold', fontSize: 14 },
+        }
+    });
+
+    doc.save('match-history.pdf');
+  };
+
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
@@ -26,7 +72,14 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose }) => {
         onClick={e => e.stopPropagation()} // Prevent closing modal when clicking inside
       >
         <header className="p-4 flex justify-between items-center border-b border-gray-700">
-          <h2 className="text-xl font-bold">Match History</h2>
+          <div className="flex items-center gap-4">
+             <h2 className="text-xl font-bold">Match History</h2>
+             {history.length > 0 && (
+                <IconButton onClick={handleDownloadPdf} ariaLabel="Download match history as PDF">
+                    <DownloadIcon />
+                </IconButton>
+             )}
+          </div>
           <IconButton onClick={onClose} ariaLabel="Close history modal">
             <CloseIcon />
           </IconButton>
