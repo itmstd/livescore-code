@@ -1,4 +1,5 @@
 {
   "name": "Live Scoreboard",
-  "description": "A simple and elegant scoreboard for live sports matches like badminton, tennis, and pickleball. Tap to score, swap sides with a button, and enjoy a clean interface designed for all devices."
+  "description": "A simple and elegant scoreboard for live sports matches like badminton, tennis, and pickleball. Tap to score, swap sides with a button, and enjoy a clean interface designed for all devices.",
+  "requestFramePermissions": []
 }

@@ -1,8 +1,9 @@
 import React from 'react';
 import IconButton from './IconButton';
+import type { Match } from '../App';
 
 interface HistoryModalProps {
-  history: { a: number; b: number }[];
+  history: Match[];
   onClose: () => void;
 }
 
@@ -11,7 +12,6 @@ const CloseIcon: React.FC = () => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
 );
-
 
 const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose }) => {
   return (
@@ -22,7 +22,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose }) => {
       role="dialog"
     >
       <div 
-        className="bg-gray-800 text-white rounded-lg shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col"
+        className="bg-gray-800 text-white rounded-lg shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col"
         onClick={e => e.stopPropagation()} // Prevent closing modal when clicking inside
       >
         <header className="p-4 flex justify-between items-center border-b border-gray-700">
@@ -36,16 +36,23 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose }) => {
             <p className="text-gray-400 text-center">No completed matches yet.</p>
           ) : (
             <ul className="space-y-3">
-              {history.map((score, index) => (
-                <li key={index} className="flex justify-between items-center bg-gray-700 p-3 rounded-md text-lg">
-                  <span className="font-semibold text-gray-300">Match {index + 1}</span>
-                  <div className="font-mono tracking-wider">
-                    <span className="font-bold text-blue-400">{score.a}</span>
-                    <span className="text-gray-500 mx-2">-</span>
-                    <span className="font-bold text-red-400">{score.b}</span>
+              {[...history].reverse().map((match) => (
+                <li key={match.timestamp} className="bg-gray-700 p-3 rounded-md text-lg">
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1 text-left">
+                        <span className="font-semibold">{match.teamA.name}</span>
+                    </div>
+                    <div className="font-mono tracking-wider mx-4">
+                      <span className="font-bold p-1 rounded" style={{ backgroundColor: match.teamA.color }}>{match.teamA.score}</span>
+                      <span className="text-gray-500 mx-2">-</span>
+                      <span className="font-bold p-1 rounded" style={{ backgroundColor: match.teamB.color }}>{match.teamB.score}</span>
+                    </div>
+                    <div className="flex-1 text-right">
+                       <span className="font-semibold">{match.teamB.name}</span>
+                    </div>
                   </div>
                 </li>
-              )).reverse() /* Show most recent match first */}
+              ))}
             </ul>
           )}
         </div>
