@@ -4,32 +4,39 @@ import Controls from './components/Controls';
 import HistoryModal from './components/HistoryModal';
 import SettingsModal from './components/SettingsModal';
 import WinnerModal from './components/WinnerModal';
+import PlayerListModal from './components/PlayerListModal';
 
-type Team = {
+export type Player = {
+  id: string;
+  name: string;
+};
+
+export type Team = {
   name: string;
   color: string;
+  players: Player[];
 };
 
 type Scores = { a: number; b: number };
 
 export type Match = {
-  teamA: { name: string; score: number; color: string; };
-  teamB: { name: string; score: number; color: string; };
+  teamA: { name: string; score: number; color: string; players: Player[]; };
+  teamB: { name: string; score: number; color: string; players: Player[]; };
   timestamp: number;
 };
 
 export const gameModes = {
-  none: { name: 'Free Play', winningScore: Infinity },
-  badminton: { name: 'Badminton', winningScore: 21 },
-  pickleball: { name: 'Pickleball', winningScore: 11 },
-  volleyball: { name: 'Volleyball', winningScore: 25 },
-  tableTennis: { name: 'Table Tennis', winningScore: 11 },
+  none: { name: 'Free Play', winningScore: Infinity, maxPlayers: Infinity },
+  badminton: { name: 'Badminton', winningScore: 21, maxPlayers: 2 },
+  pickleball: { name: 'Pickleball', winningScore: 11, maxPlayers: 2 },
+  volleyball: { name: 'Volleyball', winningScore: 25, maxPlayers: 6 },
+  tableTennis: { name: 'Table Tennis', winningScore: 11, maxPlayers: 2 },
 };
 export type GameMode = keyof typeof gameModes;
 
 
-const defaultTeamA: Team = { name: 'Team A', color: 'bg-blue-600' };
-const defaultTeamB: Team = { name: 'Team B', color: 'bg-red-600' };
+const defaultTeamA: Team = { name: 'Team A', color: 'bg-blue-600', players: [] };
+const defaultTeamB: Team = { name: 'Team B', color: 'bg-red-600', players: [] };
 
 function App() {
   const [scores, setScores] = useState<Scores>({ a: 0, b: 0 });
@@ -43,6 +50,7 @@ function App() {
   const [gameMode, setGameMode] = useState<GameMode>('none');
   const [winner, setWinner] = useState<Team | null>(null);
   const [isDeuce, setIsDeuce] = useState(false);
+  const [viewingPlayersFor, setViewingPlayersFor] = useState<Team | null>(null);
 
   useEffect(() => {
     try {
@@ -117,8 +125,8 @@ function App() {
     if (scores.a === 0 && scores.b === 0) return;
     
     const newMatch: Match = {
-      teamA: { name: teamA.name, score: scores.a, color: teamA.color },
-      teamB: { name: teamB.name, score: scores.b, color: teamB.color },
+      teamA: { name: teamA.name, score: scores.a, color: teamA.color, players: teamA.players },
+      teamB: { name: teamB.name, score: scores.b, color: teamB.color, players: teamB.players },
       timestamp: Date.now(),
     };
 
@@ -155,20 +163,22 @@ function App() {
   const teamADisplay = (
     <ScoreDisplay
       score={scores.a}
-      teamName={teamA.name}
+      team={teamA}
       onIncrement={() => handleIncrement('a')}
       bgColor={teamA.color}
       textColor="text-white"
+      onViewPlayers={() => setViewingPlayersFor(teamA)}
     />
   );
 
   const teamBDisplay = (
     <ScoreDisplay
       score={scores.b}
-      teamName={teamB.name}
+      team={teamB}
       onIncrement={() => handleIncrement('b')}
       bgColor={teamB.color}
       textColor="text-white"
+      onViewPlayers={() => setViewingPlayersFor(teamB)}
     />
   );
 
@@ -206,6 +216,9 @@ function App() {
       )}
       {winner && (
         <WinnerModal winner={winner} onClose={handleWinAcknowledged} />
+      )}
+      {viewingPlayersFor && (
+        <PlayerListModal team={viewingPlayersFor} onClose={() => setViewingPlayersFor(null)} />
       )}
     </main>
   );

@@ -88,21 +88,21 @@ const HistoryModal: React.FC<HistoryModalProps> = ({ history, onClose }) => {
           {history.length === 0 ? (
             <p className="text-gray-400 text-center">No completed matches yet.</p>
           ) : (
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               {[...history].reverse().map((match) => (
-                <li key={match.timestamp} className="bg-gray-700 p-3 rounded-md text-lg">
-                  <div className="flex justify-between items-center">
-                    <div className="flex-1 text-left">
-                        <span className="font-semibold">{match.teamA.name}</span>
-                    </div>
-                    <div className="font-mono tracking-wider mx-4">
-                      <span className="font-bold p-1 rounded" style={{ backgroundColor: match.teamA.color }}>{match.teamA.score}</span>
+                <li key={match.timestamp} className="bg-gray-700 p-4 rounded-lg text-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold">{match.teamA.name}</span>
+                    <div className="font-mono tracking-wider">
+                      <span className="font-bold p-2 rounded text-white" style={{ backgroundColor: match.teamA.color.replace('bg-', '').split('-')[0] }}>{match.teamA.score}</span>
                       <span className="text-gray-500 mx-2">-</span>
-                      <span className="font-bold p-1 rounded" style={{ backgroundColor: match.teamB.color }}>{match.teamB.score}</span>
+                      <span className="font-bold p-2 rounded text-white" style={{ backgroundColor: match.teamB.color.replace('bg-', '').split('-')[0] }}>{match.teamB.score}</span>
                     </div>
-                    <div className="flex-1 text-right">
-                       <span className="font-semibold">{match.teamB.name}</span>
-                    </div>
+                    <span className="font-bold">{match.teamB.name}</span>
+                  </div>
+                  <div className="text-xs text-gray-400 border-t border-gray-600 mt-2 pt-2 flex justify-between">
+                    <p className="truncate w-2/5 text-left">{match.teamA.players.map(p => p.name).join(', ') || 'No players'}</p>
+                    <p className="truncate w-2/5 text-right">{match.teamB.players.map(p => p.name).join(', ') || 'No players'}</p>
                   </div>
                 </li>
               ))}
