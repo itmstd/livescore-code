@@ -3,6 +3,7 @@ import ScoreDisplay from './components/ScoreDisplay';
 import Controls from './components/Controls';
 import HistoryModal from './components/HistoryModal';
 import SettingsModal from './components/SettingsModal';
+import WinnerModal from './components/WinnerModal';
 
 type Team = {
   name: string;
@@ -17,6 +18,16 @@ export type Match = {
   timestamp: number;
 };
 
+export const gameModes = {
+  none: { name: 'Free Play', winningScore: Infinity },
+  badminton: { name: 'Badminton', winningScore: 21 },
+  pickleball: { name: 'Pickleball', winningScore: 11 },
+  volleyball: { name: 'Volleyball', winningScore: 25 },
+  tableTennis: { name: 'Table Tennis', winningScore: 11 },
+};
+export type GameMode = keyof typeof gameModes;
+
+
 const defaultTeamA: Team = { name: 'Team A', color: 'bg-blue-600' };
 const defaultTeamB: Team = { name: 'Team B', color: 'bg-red-600' };
 
@@ -29,6 +40,9 @@ function App() {
   const [matchHistory, setMatchHistory] = useState<Match[]>([]);
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+  const [gameMode, setGameMode] = useState<GameMode>('none');
+  const [winner, setWinner] = useState<Team | null>(null);
+  const [isDeuce, setIsDeuce] = useState(false);
 
   useEffect(() => {
     try {
@@ -44,14 +58,51 @@ function App() {
       if (storedTeamB) {
         setTeamB(JSON.parse(storedTeamB));
       }
+      const storedGameMode = localStorage.getItem('liveScoreboardGameMode');
+      if (storedGameMode && Object.keys(gameModes).includes(JSON.parse(storedGameMode))) {
+        setGameMode(JSON.parse(storedGameMode));
+      }
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
     }
   }, []);
 
   const handleIncrement = useCallback((team: 'a' | 'b') => {
-    setScores(prev => ({ ...prev, [team]: prev[team] + 1 }));
-  }, []);
+    if (winner) return; // Don't increment score if there's a winner
+
+    const newScores = { ...scores, [team]: scores[team] + 1 };
+    setScores(newScores);
+
+    const winningScore = gameModes[gameMode].winningScore;
+    if (winningScore !== Infinity) {
+        const opponentTeam = team === 'a' ? 'b' : 'a';
+        let deuceActive = isDeuce;
+
+        // Check if scores are tied at or after winningScore - 1, which defines a deuce situation
+        if (newScores.a >= winningScore - 1 && newScores.a === newScores.b) {
+            if (!isDeuce) setIsDeuce(true);
+            deuceActive = true;
+        }
+
+        let hasWinner = false;
+        if (deuceActive) {
+            // Must win by 2
+            if (newScores[team] >= newScores[opponentTeam] + 2) {
+                hasWinner = true;
+            }
+        } else {
+            // Standard win condition
+            if (newScores[team] >= winningScore) {
+                hasWinner = true;
+            }
+        }
+
+        if (hasWinner) {
+            setWinner(team === 'a' ? teamA : teamB);
+            setIsDeuce(false); // Deuce is over, hide indicator
+        }
+    }
+  }, [scores, gameMode, winner, teamA, teamB, isDeuce]);
 
   const handleSwap = useCallback(() => {
     setIsSwapped(prev => !prev);
@@ -59,6 +110,7 @@ function App() {
 
   const handleReset = useCallback(() => {
     setScores({ a: 0, b: 0 });
+    setIsDeuce(false);
   }, []);
 
   const handleEndMatch = useCallback(() => {
@@ -74,6 +126,7 @@ function App() {
     setMatchHistory(newHistory);
     localStorage.setItem('liveScoreboardHistoryV2', JSON.stringify(newHistory));
     setScores({ a: 0, b: 0 });
+    setIsDeuce(false);
   }, [scores, matchHistory, teamA, teamB]);
 
   const toggleHistoryView = useCallback(() => {
@@ -84,13 +137,20 @@ function App() {
     setIsSettingsVisible(prev => !prev);
   }, []);
 
-  const handleSaveSettings = useCallback((newTeamA: Team, newTeamB: Team) => {
+  const handleSaveSettings = useCallback((newTeamA: Team, newTeamB: Team, newGameMode: GameMode) => {
     setTeamA(newTeamA);
     setTeamB(newTeamB);
+    setGameMode(newGameMode);
     localStorage.setItem('liveScoreboardTeamA', JSON.stringify(newTeamA));
     localStorage.setItem('liveScoreboardTeamB', JSON.stringify(newTeamB));
+    localStorage.setItem('liveScoreboardGameMode', JSON.stringify(newGameMode));
     toggleSettingsView();
   }, [toggleSettingsView]);
+
+  const handleWinAcknowledged = useCallback(() => {
+    handleEndMatch();
+    setWinner(null);
+  }, [handleEndMatch]);
 
   const teamADisplay = (
     <ScoreDisplay
@@ -113,7 +173,16 @@ function App() {
   );
 
   return (
-    <main className="w-screen h-screen bg-gray-900 flex flex-col md:flex-row overflow-hidden">
+    <main className="w-screen h-screen bg-gray-900 flex flex-col md:flex-row overflow-hidden relative">
+      <div 
+        className={`absolute top-0 left-1/2 -translate-x-1/2 mt-4 z-30 transition-opacity duration-500 pointer-events-none ${isDeuce ? 'opacity-100' : 'opacity-0'}`}
+        aria-live="polite"
+      >
+        <span className="text-white bg-yellow-600 font-bold uppercase tracking-widest text-xl md:text-2xl px-6 py-2 rounded-lg shadow-lg">
+          Deuce
+        </span>
+      </div>
+
       {isSwapped ? teamBDisplay : teamADisplay}
       <Controls
         onSwap={handleSwap}
@@ -130,9 +199,13 @@ function App() {
         <SettingsModal
           teamA={teamA}
           teamB={teamB}
+          gameMode={gameMode}
           onSave={handleSaveSettings}
           onClose={toggleSettingsView}
         />
+      )}
+      {winner && (
+        <WinnerModal winner={winner} onClose={handleWinAcknowledged} />
       )}
     </main>
   );

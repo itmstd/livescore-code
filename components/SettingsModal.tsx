@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { gameModes, GameMode } from '../App';
 
 type Team = {
   name: string;
@@ -8,7 +9,8 @@ type Team = {
 interface SettingsModalProps {
   teamA: Team;
   teamB: Team;
-  onSave: (teamA: Team, teamB: Team) => void;
+  gameMode: GameMode;
+  onSave: (teamA: Team, teamB: Team, gameMode: GameMode) => void;
   onClose: () => void;
 }
 
@@ -23,17 +25,19 @@ const colors = [
   'bg-teal-500',
 ];
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ teamA, teamB, onSave, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ teamA, teamB, gameMode, onSave, onClose }) => {
   const [currentTeamA, setCurrentTeamA] = useState<Team>(teamA);
   const [currentTeamB, setCurrentTeamB] = useState<Team>(teamB);
+  const [currentGameMode, setCurrentGameMode] = useState<GameMode>(gameMode);
 
   useEffect(() => {
     setCurrentTeamA(teamA);
     setCurrentTeamB(teamB);
-  }, [teamA, teamB]);
+    setCurrentGameMode(gameMode);
+  }, [teamA, teamB, gameMode]);
 
   const handleSave = () => {
-    onSave(currentTeamA, currentTeamB);
+    onSave(currentTeamA, currentTeamB, currentGameMode);
   };
 
   return (
@@ -108,6 +112,24 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ teamA, teamB, onSave, onC
               </div>
             </div>
           </div>
+
+          {/* Game Mode Settings */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-300 border-b border-gray-600 pb-2">Game Mode</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Object.entries(gameModes).map(([key, { name, winningScore }]) => (
+                    <button 
+                        key={key} 
+                        onClick={() => setCurrentGameMode(key as GameMode)} 
+                        className={`p-3 rounded-md text-left transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white ${currentGameMode === key ? 'bg-blue-600 text-white' : 'bg-gray-700 hover:bg-gray-600'}`}
+                    >
+                        <div className="font-semibold">{name}</div>
+                        <div className="text-sm opacity-80">{winningScore === Infinity ? 'No score limit' : `Win at ${winningScore} points`}</div>
+                    </button>
+                ))}
+            </div>
+          </div>
+
         </div>
         <footer className="p-4 flex justify-end gap-4 border-t border-gray-700">
           <button
