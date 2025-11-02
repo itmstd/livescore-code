@@ -51,6 +51,7 @@ function App() {
   const [winner, setWinner] = useState<Team | null>(null);
   const [isDeuce, setIsDeuce] = useState(false);
   const [viewingPlayersFor, setViewingPlayersFor] = useState<Team | null>(null);
+  const [orientation, setOrientation] = useState<'vertical' | 'horizontal'>('vertical');
 
   useEffect(() => {
     try {
@@ -73,6 +74,10 @@ function App() {
     } catch (error) {
       console.error("Failed to load data from localStorage:", error);
     }
+
+    // Set initial orientation based on screen width, but allow user override
+    const initialOrientation = window.innerWidth < 768 ? 'vertical' : 'horizontal';
+    setOrientation(initialOrientation);
   }, []);
 
   const handleIncrement = useCallback((team: 'a' | 'b') => {
@@ -160,6 +165,10 @@ function App() {
     setWinner(null);
   }, [handleEndMatch]);
 
+  const handleToggleOrientation = useCallback(() => {
+    setOrientation(prev => (prev === 'vertical' ? 'horizontal' : 'vertical'));
+  }, []);
+
   const teamADisplay = (
     <ScoreDisplay
       score={scores.a}
@@ -183,7 +192,9 @@ function App() {
   );
 
   return (
-    <main className="w-screen h-screen bg-gray-900 flex flex-col md:flex-row overflow-hidden relative">
+    <main className={`w-screen h-screen bg-gray-900 flex overflow-hidden ${
+      orientation === 'vertical' ? 'flex-col' : 'flex-row'
+    }`}>
       <div 
         className={`absolute top-0 left-1/2 -translate-x-1/2 mt-4 z-30 transition-opacity duration-500 pointer-events-none ${isDeuce ? 'opacity-100' : 'opacity-0'}`}
         aria-live="polite"
@@ -200,6 +211,8 @@ function App() {
         onEndMatch={handleEndMatch}
         onViewHistory={toggleHistoryView}
         onOpenSettings={toggleSettingsView}
+        onToggleOrientation={handleToggleOrientation}
+        appOrientation={orientation}
       />
       {isSwapped ? teamADisplay : teamBDisplay}
       {isHistoryVisible && (

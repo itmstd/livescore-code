@@ -1,6 +1,6 @@
 import React from 'react';
 import IconButton from './IconButton';
-import { SwapIcon, ResetIcon, EndMatchIcon, HistoryIcon, SettingsIcon } from './icons';
+import { SwapIcon, ResetIcon, EndMatchIcon, HistoryIcon, SettingsIcon, OrientationIcon } from './icons';
 
 interface ControlsProps {
   onSwap: () => void;
@@ -8,11 +8,17 @@ interface ControlsProps {
   onEndMatch: () => void;
   onViewHistory: () => void;
   onOpenSettings: () => void;
+  onToggleOrientation: () => void;
+  appOrientation: 'vertical' | 'horizontal';
 }
 
-const Controls: React.FC<ControlsProps> = ({ onSwap, onReset, onEndMatch, onViewHistory, onOpenSettings }) => {
+const Controls: React.FC<ControlsProps> = ({ onSwap, onReset, onEndMatch, onViewHistory, onOpenSettings, onToggleOrientation, appOrientation  }) => {
+  const isVerticalControls = appOrientation === 'horizontal';
+  
   return (
-    <div className="bg-gray-800 p-2 md:p-0 md:w-24 flex md:flex-col items-center justify-center gap-4">
+    <div className={`bg-gray-800 flex items-center justify-center gap-4 ${
+      isVerticalControls ? 'w-24 flex-col p-0' : 'p-2 flex-row'
+    }`}>
       <IconButton onClick={onOpenSettings} ariaLabel="Open settings">
         <SettingsIcon />
       </IconButton>
@@ -27,6 +33,9 @@ const Controls: React.FC<ControlsProps> = ({ onSwap, onReset, onEndMatch, onView
       </IconButton>
       <IconButton onClick={onViewHistory} ariaLabel="View match history">
         <HistoryIcon />
+      </IconButton>
+      <IconButton onClick={onToggleOrientation} ariaLabel="Toggle layout orientation">
+        <OrientationIcon />
       </IconButton>
     </div>
   );

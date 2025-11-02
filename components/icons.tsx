@@ -92,3 +92,20 @@ export const DownloadIcon: React.FC = () => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
     </svg>
 );
+
+export const OrientationIcon: React.FC = () => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-6 w-6 sm:h-8 sm:w-8"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 4h16" />
+      <path d="M4 20h16" />
+      <rect x="6" y="9" width="12" height="6" rx="2" />
+    </svg>
+);
